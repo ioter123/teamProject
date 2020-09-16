@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+	
+	<!-- DI로 선언된 객체를 자동주입하기 위한 선언부분 -->
+	<context:annotation-config />
+	<task:annotation-driven />
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">	
+	  <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>	
+	  <property name="url" value="jdbc:oracle:thin:@192.168.1.6:1521/xe"/>
+	  <property name="username" value="weather"/>	
+	  <property name="password" value="1234"/>
+	</bean>
+	
+	<!-- myBatis 등록 부분이다 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- myBatis를 위한 환결설정파일이 어디에 어떤이름으로 만들어져있는지 지정 -->
+		<property name="configLocation" >
+			<value>classpath:/com/weather/myBatis/myBatis-config.xml</value>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!--  myBatis에서 스테이트먼트를 구하는 기능을 DI로 처리 -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" destroy-method="clearCache">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+
+	
+	<!-- 브라우저가 multipart/form-data 데이터로 보내는 파일을 처리하기 위한 MultipartResolver 클래스를 bean으로 등록  -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"></bean>
+	
+	<bean id="updatelifeDAO" class="com.weather.proj.life.dao.UpdatelifeDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="selectlifeDAO" class="com.weather.proj.life.dao.SelectlifeDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="productDAO" class="com.weather.proj.life.dao.ProductDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="saveJisuGoodDAO" class="com.weather.proj.life.dao.SaveJisuGoodDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="mainDAO" class="com.weather.proj.main.dao.MainDAO"> 
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="MemberDAO" class="com.weather.proj.member.dao.MemberDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+	<bean id="MemberManageDAO" class="com.weather.proj.admin.dao.MemberManageDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	<!-- gmail 비번 메일 보내기 최정호-->
+    <bean id="mailSender" class ="org.springframework.mail.javamail.JavaMailSenderImpl" >
+        <property name="host" value="smtp.gmail.com" />
+        <property name="port" value="587" />
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="username" value="snfndwl8250@gmail.com" />
+        <property name="password" value="30tkeks116" />  
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.starttls.enable">true</prop>
+                <prop key="mail.smtp.auth">true</prop>   
+                <prop key="mail.transport.protocol">smtp</prop>  <!-- 이성원: 추가 -->
+                <prop key="mail.debug">true</prop>                    
+            </props>
+        </property>   
+    </bean>
+    <bean id="email" class="com.weather.proj.member.util.Email">
+    </bean>
+    <bean id="emailSender" class="com.weather.proj.member.util.EmailSend">
+    </bean>   
+	<bean id="NoticeDAO" class="com.weather.proj.notice.dao.NoticeDAO">  
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	<bean id="joinDAO" class="com.weather.proj.join.dao.JoinDAO">
+	</bean>
+	<!-- 이성원: 이메일인증 -->
+    <bean id = "transactionManager" class ="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+ 		<property name = "dataSource" ref = "dataSource"></property>
+	</bean>
+	<tx:annotation-driven/>	
+
+	<!-- weather DAO -->
+	<bean id="weatherDAO" class="com.weather.proj.temp.dao.WeatherDAO">
+		<property name="sqlSessionTemplate" ref="sqlSession"/>
+	</bean>
+	
+</beans>

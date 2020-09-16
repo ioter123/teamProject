@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC  "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memManage">
+	
+	<!-- 회원수 -->
+	<select id="memCnt" resultType="int">
+		select count(*) from customer
+	</select>
+	
+	<!-- 회원리스트 -->
+	<select id="memList" resultType="MemberVO" parameterType="MemberVO">
+		select * from (select CUS_NO,CUS_NAME,CUS_ID,CUS_PASSWORD,CUS_PHONE,CUS_SEX,CUS_EMAIL,CUS_EMAILCK,CUS_HOBBY,CUS_NOTE,CUS_CLASS,CUS_DATE,CUS_OUT,CUS_AUTHCODE,  ROW_NUMBER() OVER(ORDER BY cus_no desc) as rnum from customer) where rnum between #{startNo} and #{endNo}
+	</select>
+	
+	<!-- 회원 검색 -->
+	<select id="memListProc" resultType="MemberVO" parameterType="MemberVO">
+		select * from (select CUS_NO,CUS_NAME,CUS_ID,CUS_PASSWORD,CUS_PHONE,CUS_SEX,CUS_EMAIL,CUS_EMAILCK,CUS_HOBBY,CUS_NOTE,CUS_CLASS,CUS_DATE,CUS_OUT,CUS_AUTHCODE,  ROW_NUMBER() OVER(ORDER BY cus_no desc) as rnum from customer where cus_name like #{word}) where rnum between #{startNo} and #{endNo} 
+	</select>
+	
+	<select id="memListProc2" resultType="MemberVO" parameterType="MemberVO">
+		select * from (select CUS_NO,CUS_NAME,CUS_ID,CUS_PASSWORD,CUS_PHONE,CUS_SEX,CUS_EMAIL,CUS_EMAILCK,CUS_HOBBY,CUS_NOTE,CUS_CLASS,CUS_DATE,CUS_OUT,CUS_AUTHCODE,  ROW_NUMBER() OVER(ORDER BY cus_no desc) as rnum from customer where cus_id like #{word}) where rnum between #{startNo} and #{endNo} 
+	</select>
+	
+	<select id="memListProc3" resultType="MemberVO" parameterType="MemberVO">
+		select * from (select CUS_NO,CUS_NAME,CUS_ID,CUS_PASSWORD,CUS_PHONE,CUS_SEX,CUS_EMAIL,CUS_EMAILCK,CUS_HOBBY,CUS_NOTE,CUS_CLASS,CUS_DATE,CUS_OUT,CUS_AUTHCODE,  ROW_NUMBER() OVER(ORDER BY cus_no desc) as rnum from customer where cus_email like #{word}) where rnum between #{startNo} and #{endNo} 
+	</select>
+	
+	<select id="memListProc4" resultType="MemberVO" parameterType="MemberVO">
+		select * from (select CUS_NO,CUS_NAME,CUS_ID,CUS_PASSWORD,CUS_PHONE,CUS_SEX,CUS_EMAIL,CUS_EMAILCK,CUS_HOBBY,CUS_NOTE,CUS_CLASS,CUS_DATE,CUS_OUT,CUS_AUTHCODE,  ROW_NUMBER() OVER(ORDER BY cus_no desc) as rnum from customer where (cus_name like #{word}) or (cus_id like #{word}) or (cus_email like #{word})) where rnum between #{startNo} and #{endNo} 
+	</select>
+	
+	<!-- 회원 수 조회 -->
+	<select id="memCntProc" resultType="int" parameterType="MemberVO">
+		select count(*) from customer where cus_name like #{word}
+	</select>
+	
+	<select id="memCntProc2" resultType="int" parameterType="MemberVO">
+		select count(*) from customer where cus_id like #{word}
+	</select>
+	
+	<select id="memCntProc3" resultType="int" parameterType="MemberVO">
+		select count(*) from customer where cus_email like #{word}
+	</select>
+	
+	<select id="memCntProc4" resultType="int" parameterType="MemberVO">
+		select count(*) from customer where (cus_name like #{word}) or (cus_id like #{word}) or (cus_email like #{word})
+	</select>
+	
+	<!-- 특정 회원 정보 조회 -->
+	<select id="manageDetail" resultType="MemberVO" parameterType="MemberVO">
+		select * from customer where cus_no= #{cus_no}
+	</select>
+	
+	<!-- 회원 정보 수정 -->
+	<update id="updateMember" parameterType="MemberVO">
+		update	customer set cus_name=#{cus_name}, cus_password=#{cus_password},cus_phone=#{cus_phone}, cus_sex=#{cus_sex}, cus_email=#{cus_email}, cus_note=#{cus_note}, cus_class=#{cus_class}, cus_out=#{cus_out} where cus_no=#{cus_no}
+	</update>
+	
+</mapper>

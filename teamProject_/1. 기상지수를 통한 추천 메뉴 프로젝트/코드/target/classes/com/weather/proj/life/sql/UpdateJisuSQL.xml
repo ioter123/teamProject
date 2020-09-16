@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC  "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="updateJisu">
+	
+	<!-- 지점코드 및 이름 조회 -->
+	<select id="location" resultType="java.util.HashMap">
+		select local_code, local_si from local where local_gu is null
+	</select>
+	
+	<!-- 지수 데이터 제공 시간 조회 -->
+	<select id="selectTime" resultType="int" parameterType="java.util.HashMap">
+		select count(*) from lifejisu where jisu_time=to_date(#{time},'YYYYMMDDhh24') and jisu_local_code=#{areaNo}
+	</select>
+	
+	<!-- 실시간 지수 데이터 저장 -->
+	<insert id="insertJisu" parameterType="lifeJisuVO">
+		<selectKey keyProperty="jisu_no" resultType="int" order="BEFORE">
+			select nvl(max(jisu_no),0)+1 from lifejisu
+		</selectKey>
+		insert into lifejisu values(#{jisu_no},#{jisu_time},#{jisu_foodpoison},#{jisu_senstemp},#{jisu_heat},#{jisu_discomfort},#{jisu_UV},#{jisu_sensheat},#{jisu_sky},#{jisu_frozen},#{jisu_local_code})
+	</insert>
+
+</mapper>

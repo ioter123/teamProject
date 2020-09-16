@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC  "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mainProduct">
+
+	
+	<!-- 항목 리스트2 -->
+	<select id="mainProductList" resultType="ProductVO">
+		select * from (select * from product where product_isshow='Y' order by product_seq asc) where 4>rownum
+	</select>
+	
+
+
+</mapper>

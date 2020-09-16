@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 이 부분에서 myBatis에 관련된 환경설정을 한다 -->
+	<!-- 기본 동작에 대한 환경 설정을 한다. -->
+	<settings>
+		<!-- 캐쉬 메모리 사용여부 -->
+		<setting name="cacheEnabled" value="false" />
+		<!-- 일반화 키 사용여부 -->
+		<setting name="useGeneratedKeys" value="true" />
+		<!-- 기본 질의 실행 방식 -->
+		<setting name="defaultExecutorType" value="REUSE" />		
+	</settings>
+	
+	<typeAliases>
+		<!-- 쿼리문을 실행할 때 사용하게 되는 자바적인 데이터 형태를 간단히 사용할 수 있도록 별칭을 지정하는 부분 -->
+		<typeAlias alias="string" type="java.lang.String"/>
+		<typeAlias alias="int" type="java.lang.Integer"/>
+		<typeAlias alias="long" type="java.lang.Long"/>
+		<typeAlias alias="lifeJisuVO" type="com.weather.proj.life.vo.LifeJisuVO"/>
+		<typeAlias alias="ProductVO" type="com.weather.proj.life.vo.ProductVO"/>
+		<!-- weather -->
+		<typeAlias alias="WeatherVO" type="com.weather.proj.temp.vo.WeatherVO"/>
+		<typeAlias alias="MemberVO" type="com.weather.proj.member.vo.MemberVO"/>
+		<typeAlias alias="NoticeVO" type="com.weather.proj.notice.VO.NoticeVO"/>
+	</typeAliases>
+	
+	<mappers>
+		<!-- 사용할 쿼리문이 기록된 xml파일을 등록하는 부분 -->
+		<!-- <mapper resource="xml의 경로 및 파일명"/> -->
+		<mapper resource="/com/weather/proj/life/sql/UpdateJisuSQL.xml"/>
+		<mapper resource="/com/weather/proj/life/sql/ProductSQL.xml"/>
+		<mapper resource="/com/weather/proj/life/sql/SelectJisuSQL.xml"/>
+		<mapper resource="/com/weather/proj/life/sql/SaveJisuGoodSQL.xml"/>
+		<mapper resource="/com/weather/proj/main/sql/MainProductSQL.xml"/>
+		<mapper resource="/com/weather/proj/member/sql/MemberSQL.xml"/>
+		<mapper resource="/com/weather/proj/board/sql/boardSQL.xml"/>
+		<mapper resource="/com/weather/proj/board/sql/replySQL.xml"/>
+		<mapper resource="/com/weather/proj/admin/sql/MemberManageSQL.xml"/>
+		<mapper resource="/com/weather/proj/notice/sql/NoticeSQL.xml"/>
+		<mapper resource="/com/weather/proj/join/sql/JoinSQL.xml"/>
+		<!-- weather loc -->
+		<mapper resource="/com/weather/proj/temp/sql/WeatherSQL.xml"/>
+		
+	</mappers>
+</configuration>
+
+

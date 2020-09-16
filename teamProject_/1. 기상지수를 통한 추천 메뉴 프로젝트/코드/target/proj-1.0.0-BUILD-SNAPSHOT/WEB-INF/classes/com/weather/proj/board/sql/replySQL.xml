@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 다른 mapper와 중복되지 않도록 네임스페이스 기재 -->
+<mapper namespace="reply">
+	
+	<!-- 댓글 갯수 조회 -->
+	<select id="countRecord" resultType="int">
+		select count(*) from reply 
+		where rep_isshow = 'Y'
+		and rep_orino = #{rep_orino} 
+	</select>
+	
+	<!-- 댓글 목록 조회 -->
+	<select id="replyList" resultType="com.weather.proj.board.vo.ReplyVO">
+		<include refid="paging_header"/>
+		select r.rep_no, r.rep_orino, r.rep_text, r.rep_writer, c.cus_name, 
+		       r.rep_regdate, r.rep_updatedate,
+		       (select brd_writer from board where brd_no = r.rep_orino) as brd_writer
+		from reply r, customer c
+		where r.rep_isshow = 'Y'
+		and r.rep_writer = c.cus_id 
+		and r.rep_orino = #{rep_orino}
+		order by r.rep_no	desc
+		<include refid="paging_footer"/>	
+	</select>
+	
+	<!-- 페이징 헤더 -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select rownum as rn, a.*
+		    from (	
+	</sql>
+	<!-- 페이징 푸터 -->
+	<sql id="paging_footer">
+		    ) a
+		) where rn between #{start} and #{end}	
+	</sql>
+
+    <!-- 댓글 입력 -->
+	<insert id="replyInsert">
+		insert into reply (rep_no, rep_orino, rep_text, rep_writer) 
+		values((select nvl(max(rep_no),0)+1 from reply), 
+					 #{rep_orino}, #{rep_text}, #{rep_writer} )
+	</insert>
+	
+	<!-- 댓글 수정 -->
+	<update id="replyUpdate">
+		update reply
+		set rep_text = #{rep_text},
+		    rep_updatedate = SYSDATE
+		where rep_no = #{rep_no}
+	</update>
+	
+	<!-- 댓글 삭제(rep_isshow = 'N'로 수정) -->
+	<update id="replyDelete">
+		update reply set rep_isshow = 'N'
+		where rep_no = #{rep_no}
+	</update>	
+	
+</mapper>

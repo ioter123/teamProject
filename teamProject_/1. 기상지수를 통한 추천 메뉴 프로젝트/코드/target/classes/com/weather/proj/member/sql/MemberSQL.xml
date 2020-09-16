@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member">
+	<select id="loginProc2" 
+					resultType="MemberVO"
+					parameterType="MemberVO">
+		SELECT
+			 *
+		FROM 
+			 customer
+		WHERE
+			cus_id = #{cus_id}
+			<!-- and -->
+			<!--not (cus_class = 2) -->
+ 	</select>
+	
+	<select id="loginProc" 
+					resultType="MemberVO"
+					parameterType="MemberVO">
+		SELECT
+			 *
+		FROM 
+			 customer
+		WHERE
+			cus_id = #{cus_id}
+			and
+			cus_password = #{cus_password}
+			AND
+ 			not (cus_class = 2)
+ 	</select>
+ 	
+	<select id="getMemberCNT" 
+	        resultType="java.lang.Integer">
+		select 
+			count(*) AS CNT
+		from 
+			customer
+	</select>	
+
+
+<!-- 아이디찾기 -->
+	<select id="searchId" 
+					resultType="MemberVO"
+					parameterType="MemberVO">
+		SELECT
+	     cus_id,
+	     cus_phone 
+		FROM 
+			 customer
+		WHERE
+			cus_name = #{cus_name} 
+			AND
+ 			cus_email = #{cus_email}
+ 			AND
+ 			not (cus_class = 2)
+ 	</select>
+	
+<!-- 비번찾기 -->
+	<select id="searchPw" 
+					resultType="MemberVO"
+					parameterType="MemberVO">
+		SELECT
+	     cus_password,
+	     cus_id,
+	     cus_email
+	     
+		FROM 
+			 customer
+		WHERE
+			cus_name = #{cus_name} 
+			AND
+ 			cus_id = #{cus_id}
+ 			AND
+ 			cus_email = #{cus_email}
+ 			AND
+ 			cus_out= 'N'
+ 			AND
+ 			not (cus_class = 2)
+ 	</select>
+ 	
+ 	<!-- 비번/클래스 업테이트 -->
+	<update id="setpw" 
+					parameterType="MemberVO">
+	UPDATE
+	     customer
+	   set 
+		 cus_password = #{cus_password}
+	WHERE
+			cus_name = #{cus_name} 
+			AND
+ 			cus_id = #{cus_id}
+ 			AND
+ 			cus_email = #{cus_email}
+ 			AND
+ 			cus_out= 'N'
+   	</update>
+   	
+   	<!-- 이름 아이디 이메일 일치 여부 체크 -->
+	<select id="check" resultType="int"
+					parameterType="MemberVO">
+	SELECT
+	     count(*)
+	    FROM 
+		 	customer
+		WHERE
+			cus_name = #{cus_name} 
+			AND
+ 			cus_id = #{cus_id}
+ 			AND
+ 			cus_email = #{cus_email}
+ 			AND
+ 			cus_out= 'N'
+ 			AND
+ 			not (cus_class = 2)
+   	</select>
+   	
+  
+</mapper>

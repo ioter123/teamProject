@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 다른 mapper와 중복되지 않도록 네임스페이스 기재 -->
+<mapper namespace="join">
+	<!-- 회원가입 -->
+	<insert id="joinInsert" parameterType="MemberVO">
+		insert into customer (
+			cus_no,
+			cus_name,
+			cus_id,
+			cus_password,
+			cus_phone,
+			cus_sex,
+			cus_email,
+			cus_emailck,
+			cus_note,
+			cus_class,
+			cus_date,
+			cus_out,
+			cus_authcode
+		)values
+			(( select nvl(max(cus_no),0)+1 
+		          FROM   customer  ),
+			  #{cus_name}, 
+			  #{cus_id}, 
+			  #{cus_password},
+			  #{cus_phone}, 
+			  #{cus_sex}, 
+			  #{cus_email},
+			  'N',
+			  #{cus_note},
+			  0,
+			  SYSDATE,
+			  'N',
+			  '')
+	</insert>
+	<!-- 연동회원가입 -->
+	<insert id="joinInsert2" parameterType="MemberVO">
+		insert into customer values
+			(( select nvl(max(cus_no),0)+1 
+		          FROM   customer  ),
+			  #{cus_name}, 
+			  #{cus_id}, 
+			  '1234dhtsdj2a3@@d',
+			  '01000000000', 
+			  'M', 
+			  #{cus_email},
+			  'N',
+			  '',
+			  '',
+			  2,
+			  SYSDATE,
+			  'N',
+			  '')
+	</insert>
+	<!-- 회원가입-이메일인증키 저장 -->
+	<update id="createAuthKey" >
+		update customer
+		set cus_authcode = #{cus_authcode}
+	  where cus_id = #{cus_id}
+	  and cus_password = #{cus_password}
+	  and cus_out = 'N'			
+	</update>	
+	<!-- 회원가입-이메일체크 수정 -->
+	<update id="mailCheck" >
+		update customer
+		set cus_emailck = 'Y'
+	  where cus_email = #{cus_email}
+	  and cus_authcode = #{cus_authcode}
+	  and cus_out = 'N'			
+	</update>			
+	
+	<!-- ID중복 체크 -->
+	<select id="joinIdCheck"  resultType="int">
+		select count(*) 
+		from customer
+	  where cus_id = #{cus_id}
+	</select>
+
+	<!-- 회원정보 조회 -->
+	<select id="joinView"  resultType="com.weather.proj.member.vo.MemberVO">
+		select cus_id, cus_name, cus_phone, cus_sex, cus_email, cus_note 
+		from customer
+	  where cus_id = #{cus_id}
+	  and cus_out = 'N'
+	</select>	
+
+	<!-- 회원정보수정-->
+	<update id="joinUpdate" >
+		update customer
+		set cus_name = #{cus_name}, 
+			  cus_phone = #{cus_phone}, 
+			  cus_sex = #{cus_sex}, 
+			  cus_email = #{cus_email},
+			  cus_note = #{cus_note}
+	  where cus_id = #{cus_id}
+	  and cus_password = #{cus_password}
+	  and cus_out = 'N'			
+	</update>	
+
+	<!-- 패스워드 체크 -->
+	<select id="joinPwCheck"  resultType="int">
+		select count(*) 
+		from customer
+	  where cus_id = #{cus_id}
+	  and cus_password = #{cus_password}
+	  and cus_out = 'N'	
+	  
+	</select>
+
+	<!-- 패스워드수정-->
+	<update id="joinPwUpdate" >
+		update customer
+		set cus_password = #{new_password}
+	  where cus_id = #{cus_id}
+	  and cus_password = #{cus_password}
+	  and cus_out = 'N'			
+	</update>	
+	
+	<!-- 회원탈퇴-->
+	<update id="joinWithdraw" >
+		update customer
+		set cus_out = 'Y'
+	  where cus_id = #{cus_id}
+	  and cus_password = #{cus_password}
+	  and cus_out = 'N'			
+	</update>		
+	
+</mapper>

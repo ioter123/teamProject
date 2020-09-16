@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+				"-//mybatis.org//DTD Mapper 3.0//EN" 
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="weather">
+	<!-- 지역정보 조회 -->
+	<select id="weatherLoc" resultType="WeatherVO">					
+		SELECT
+			 LOCAL_SI,
+			 LOCAL_LONGITUDE,
+			 LOCAL_LATITUDE,
+			 LOCAL_CODE
+		FROM 		
+			LOCAL
+		WHERE
+			LOCAL_GU IS NULL
+		order by
+			local_code
+ 	</select>
+ 	<!-- 특정 지역 오늘의 날씨 정보 조회 -->
+ 	<select id="weatherLoc2" resultType="WeatherVO" parameterType="WeatherVO">
+ 		select
+ 			* 						
+ 		from
+		(SELECT
+			 *
+		FROM 	
+		 weather	
+		WHERE
+			WE_DATE=#{today}
+			and
+			WE_LOCAL_CODE=#{local_code} 
+		order by
+			WE_TIME desc
+			)
+		where 
+			rownum=1
+			
+ 	</select>
+ 	<!-- 오늘 기온 정보 조회 -->
+ 	<select id="weatherLoc3" resultType="WeatherVO" parameterType="WeatherVO">
+ 		SELECT
+			 *
+		FROM 	
+		 weather	
+		WHERE
+			WE_DATE=#{today}
+			and
+			WE_LOCAL_CODE=#{local_code} 
+		order by
+			WE_TIME desc
+ 	</select>
+ 	<!-- 어제 기온 정보 조회 -->
+ 	<select id="weatherLoc4" resultType="WeatherVO" parameterType="WeatherVO">
+ 		SELECT
+			 *
+		FROM 	
+		 weather	
+		WHERE
+			WE_DATE=#{yesterday}
+			and
+			WE_LOCAL_CODE=#{local_code} 
+		order by
+			WE_TIME desc
+ 	</select>
+ 	
+ 	<!-- 날씨 정보 저장 -->
+	<insert id="weatherSave" parameterType="WeatherVO">
+		<selectKey keyProperty="WE_NO" resultType="int" order="BEFORE">
+			select nvl(max(WE_NO),0)+1 from WEATHER
+		</selectKey>
+ 		INSERT INTO WEATHER
+ 		VALUES (#{WE_NO}, #{WE_DATE},#{WE_TEMPERATURE},#{WE_RAIN},#{WE_WIND_DIRECTION},#{WE_WIND_SPEED},#{WE_HUMIDITY},#{WE_TIME}, #{WE_LOCAL_CODE})
+ 	</insert>
+ 			
+ 	
+ 	
+ 	
+</mapper>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC  "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="product">
+
+	<!-- 항목 추가 -->
+	<insert id="addProduct" parameterType="ProductVO">
+		<selectKey keyProperty="product_no" resultType="int" order="BEFORE">
+			select nvl(max(product_no),0)+1 from product
+		</selectKey>
+		insert into product values(#{product_no},#{product_name},#{product_detail},#{product_image},'Y',(select nvl(max(product_seq),0)+1 from product))
+	</insert>
+	
+	<!-- 항목 번호 최근입력값 -->
+	<select id="productno" resultType="int" >
+		select max(product_no) from product
+	</select>
+	
+	<!-- 항목 추천 추가 -->
+	<insert id="addRecomm" parameterType="ProductVO">
+		<selectKey keyProperty="recomm_no" resultType="int" order="BEFORE">
+			select nvl(max(recomm_no),0)+1 from recommgoods
+		</selectKey>
+		insert into recommgoods values(#{recomm_no},0,#{recomm_jisu_no},#{recomm_prod_no}, sysdate,'Y')
+	</insert>
+	
+	<!-- 항목 수정 -->
+	<update id="updateProduct" parameterType="ProductVO">
+		update product set product_name=#{product_name},product_detail=#{product_detail},product_image=#{product_image} where product_no=#{product_no}
+	</update>
+	
+	<!-- 항목 리스트 갯수 조회 -->
+	<select id="productListCnt" resultType="int">
+		select count(*) from product where product_isshow='Y'
+	</select>
+	
+	<!-- 항목 리스트 -->
+	<select id="productList" resultType="ProductVO">
+		select * from recommgoods where TO_CHAR(recomm_date, 'YYYYMMDD')=TO_CHAR(SYSDATE, 'YYYYMMDD') and recomm_isshow='Y' order by recomm_prod_no
+	</select>
+	
+	<!-- 항목 리스트2 -->
+	<select id="productListSub" resultType="ProductVO">
+		select * from product where product_isshow='Y' order by product_no
+	</select>
+	
+	<!-- 항목 상세 -->
+	<select id="productDetail" resultType="ProductVO" parameterType="int">
+		select * from recommgoods where TO_CHAR(recomm_date, 'YYYYMMDD')=TO_CHAR(SYSDATE, 'YYYYMMDD') and recomm_prod_no=#{recomm_prod_no} and recomm_isshow='Y' 
+	</select>
+	
+	<!-- 항목 상세2 -->
+	<select id="productDetailSub" resultType="ProductVO" parameterType="int">
+		select * from product where  product_no=#{recomm_prod_no}  and product_isshow='Y'
+	</select>
+	
+	<!-- 항목 삭제 -->
+	<update id="productDelete" parameterType="int">
+		update recommgoods set recomm_isshow ='N' where  recomm_prod_no=#{recomm_prod_no}
+	</update>
+	
+	<!-- 항목 삭제2 -->
+	<update id="productDeleteSub" parameterType="int">
+		update product set product_isshow ='N' where  product_no=#{recomm_prod_no}
+	</update>
+	
+	<!-- 좋아요 증가 -->
+	<update id="recommendGood" parameterType="int">
+		update recommgoods set recomm_good = recomm_good+1 where  recomm_prod_no=#{recomm_prod_no} and recomm_isshow='Y' and TO_CHAR(recomm_date, 'YYYYMMDD')=TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</update>
+	
+	<!-- 좋아요 감소 -->
+	<update id="recommendBad" parameterType="int">
+		update recommgoods set recomm_good = recomm_good-1 where  recomm_prod_no=#{recomm_prod_no} and recomm_isshow='Y' and TO_CHAR(recomm_date, 'YYYYMMDD')=TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</update>
+	
+	<!-- 항목 추천 초기화 -->
+	<update id="recommendReset">
+		update recommgoods set recomm_isshow ='N'
+	</update>
+	
+	<!-- 항목 추천 초기화2 -->
+	<insert id="recommendReset2" parameterType="ProductVO">
+		<selectKey keyProperty="recomm_no" resultType="int" order="BEFORE">
+			select nvl(max(recomm_no),0)+1 from recommgoods
+		</selectKey>
+		insert into recommgoods values(#{recomm_no},0,#{recomm_jisu_no},#{recomm_prod_no}, sysdate,'Y')
+	</insert>
+	
+	<!-- 항목 추천 초기화3 -->
+	<select id="recommendReset3" resultType="int">
+		select product_no from product where product_isshow='Y'
+	</select>
+
+</mapper>

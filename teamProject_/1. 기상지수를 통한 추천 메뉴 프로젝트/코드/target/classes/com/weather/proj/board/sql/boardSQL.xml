@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 다른 mapper와 중복되지 않도록 네임스페이스 기재 -->
+<mapper namespace="board">
+	
+	<!-- 게시판 목록 조회 -->
+	<select id="boardList" resultType="com.weather.proj.board.vo.BoardVO">
+		<include refid="paging_header"/>
+		select b.brd_no, b.brd_title, b.brd_writer, c.cus_name, 
+		       b.brd_regdate, b.brd_viewcnt,
+		       (select count(*) from reply where rep_orino = b.brd_no and rep_isshow = 'Y') as reply_cnt,
+		       (select count(*) from board_fileattach where file_orino = b.brd_no) as file_cnt
+		from board b, customer c 
+		<include refid="search"/>	
+		order by b.brd_no desc
+		<include refid="paging_footer"/>
+	</select>
+	
+	<!-- 게시판 게시물수 -->
+	<select id="countRecord" resultType="int">
+		select count(*) 
+		from board b, customer c
+		<include refid="search"/>	  
+	</select>
+	
+	<!-- 검색관련 sql -->
+	<sql id="search">
+		<choose>
+			<when test="search_option == 'all' ">
+				where b.brd_isshow = 'Y'
+        and b.brd_writer = c.cus_id
+        and (c.cus_name like '%'||#{keyword}||'%' or
+             b.brd_content like '%'||#{keyword}||'%' or
+             b.brd_title like '%'||#{keyword}||'%')
+			</when>
+			<otherwise>
+				where b.brd_isshow = 'Y'
+        and b.brd_writer = c.cus_id
+        and ${search_option} like '%'||#{keyword}||'%'
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 페이징 헤더 -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select rownum as rn, a.*
+		    from (	
+	</sql>
+	<!-- 페이징 푸터 -->
+	<sql id="paging_footer">
+		    ) a
+		) where rn between #{start} and #{end}	
+	</sql>
+	
+	<!-- 게시판 조회수ㅡ -->
+	<update id="addViewcnt">
+		update board 
+		set brd_viewcnt = brd_viewcnt + 1
+		where brd_no = #{brd_no}
+	</update>
+	
+	<!-- 게시판 읽기 -->
+	<select id="boradRead" resultType="com.weather.proj.board.vo.BoardVO">
+		select b.brd_no, b.brd_title, b.brd_content, b.brd_writer, c.cus_name, 
+		       b.brd_regdate, b.brd_viewcnt  
+		from board b, customer c
+		where b.brd_no = #{brd_no}
+		and b.brd_writer = c.cus_id
+	</select>
+	
+	<!-- 게시판 글정보를 입력 -->
+	<insert id="boardInsert">
+		<selectKey keyProperty="brd_no" resultType="int" order="BEFORE">
+			select nvl(max(brd_no),0)+1 as brd_no
+			from board
+		</selectKey>
+		insert into board values
+			(#{brd_no}, #{brd_title}, #{brd_content}, #{brd_writer}, SYSDATE, SYSDATE, 0, 'Y')
+	</insert>
+	
+	<!-- 게시판 글정보 수정 -->	
+	<update id="boardUpdate">
+		update board 
+		set brd_title = #{brd_title}, 
+		    brd_content = #{brd_content},
+		    brd_updatedate = SYSDATE
+		where brd_no = #{brd_no}    
+	</update>
+	
+	<!-- 게시판 글정보 삭제(brd_isshow = 'N'로 수정) -->
+	<update id="boardDelete">
+		update board 
+		set brd_isshow = 'N' 
+		where brd_no = #{brd_no}    
+	</update>
+	
+	<!-- 게시판에 첨부된 파일 목록 조회 -->
+	<select id="fileList" resultType="com.weather.proj.board.vo.BoardVO">
+		select 
+		  file_orino as oriNo,
+			file_path  as path, 
+			file_oriname as oriName, 
+			file_savename as saveName, 
+			file_size as fileSize
+    from board_fileattach
+		where file_orino = #{brd_no}
+		order by file_regdate desc
+	</select>
+	
+	<!-- 게시판에 첨부된 파일 저장  --> 
+	<insert id="fileSave">
+		insert into
+			board_fileattach
+		values( ( select nvl(max(file_no),0)+1 
+		          FROM   board_fileattach  ),
+           	#{oriNo},#{path}, #{oriName}, #{saveName}, #{fileSize}, SYSDATE)
+	</insert>
+	
+	<!-- 게시판에 첨부된 파일 삭제(by saveName)--> 
+	<delete id="fileDelete">
+		delete from board_fileattach
+		where file_savename = #{saveName}
+	</delete>
+	
+	<!-- board_fileattach 첨부파일 삭제(by oriNo)--> 
+	<delete id="fileDelByOrino">
+		delete from board_fileattach
+		where file_orino = #{oriNo}
+	</delete>	
+</mapper>

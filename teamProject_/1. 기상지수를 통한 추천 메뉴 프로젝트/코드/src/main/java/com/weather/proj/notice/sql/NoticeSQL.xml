@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+																"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="notice">
+	<!-- 공지사항 전체목록보기 -->
+	<select id="noticeList" resultType="noticeVO"
+		parameterType="noticeVO">
+		<include refid="pagingHeader"></include>
+		select 
+		noti_no as no,
+		noti_writer as writer,
+		noti_title as title,
+		noti_body as body, 
+		noti_regdate as regdate,
+		noti_updatedate as update_date, 
+		noti_hit as hit,
+		noti_ischeck as isCheck
+		from notice
+		<!-- where절을 include태그로 -->
+		<include refid="search"></include>
+		order by noti_updatedate desc,
+						noti_no desc
+						
+		<!-- noti_updatedate desc -->
+		<include refid="pagingFooter"></include>
+	</select>
+	
+	<!-- 공지사항 중요 공지 가져오기 -->
+	<select id="noticeList2" resultType="noticeVO">
+		select 
+		noti_no as no,
+		noti_writer as writer,
+		noti_title as title,
+		noti_body as body, 
+		noti_regdate as regdate,
+		noti_updatedate as update_date, 
+		noti_hit as hit,
+		noti_ischeck as isCheck
+		from notice
+		where noti_ischeck='on'
+		and noti_isshow = 'Y'
+		order by noti_updatedate desc,
+						noti_no desc
+	</select>
+
+
+	<!-- 게시글 레코드 갯수 -->
+	<select id="countArticle" resultType="int">
+		select count(*) from notice
+		<include refid="search"></include>
+	</select>
+
+	<!-- 공지사항 검색기능 -->
+	<!-- 반복되는 sql의 일부를 sql태그를 이용하여 따로 빼둘수 있다. -->
+	<sql id="search">
+		<choose>
+			<!-- 검색옵션이 전체 검색일 경우 -->
+			<when test="searchOption == 'all'">
+				where noti_isshow = 'Y'
+				and 
+				(noti_title like '%'||#{keyword}||'%'
+				or noti_body like '%'||#{keyword}||'%')
+			</when>
+			<!-- 전체 검색이 아닐경우 -->
+			<otherwise>
+				where ${searchOption} like '%'||#{keyword}||'%'
+				and noti_isshow = 'Y'
+			</otherwise>
+		</choose>
+	</sql>
+
+
+	<!-- 공지사항 페이징 -->
+
+	<sql id="pagingHeader">
+		select * from(
+		select ROWNUM as rn, list.* from(
+
+	</sql>
+	<sql id="pagingFooter">
+		) list
+		)where rn between #{start} and #{end}
+	</sql>
+
+
+	<!-- 공지사항 게시물상세보기 -->
+	<select id="noticeDetail" resultType="noticeVO">
+		select 
+		noti_no as no,
+		noti_writer as writer,
+		noti_title as title,
+		noti_body as body,
+		noti_regdate as regdate,
+		noti_updatedate as update_date,
+		noti_hit as hit,
+		noti_isshow as isshow,
+		noti_ischeck as isCheck
+		
+		from notice 
+		where noti_no = #{no}
+
+	</select>
+	
+	
+
+	<!-- 게시글 조회수 증가 -->
+	<update id="increaseViewCnt">
+		update notice
+		set noti_hit = noti_hit+1
+		where noti_no = #{no}
+
+	</update>
+
+
+	<!-- 게시글 작성 -->
+	<insert id="insert">
+		<!-- 게시글 번호를 서브쿼리로 생성 -->
+		insert into notice(
+		noti_no,
+		noti_title,
+		noti_writer,
+		noti_body,
+		noti_updatedate,
+		noti_ischeck
+		<!-- noti_writer -->
+		) values(
+		(select nvl(max(noti_no),0)+1 from notice),
+		#{title},
+		#{writer},
+		#{body},
+		SYSDATE,
+		#{isCheck}
+		<!-- (select CASE WHEN #{isCheck} IS NULL THEN 'off' else #{isCheck} END) -->
+		
+		<!-- #{writer} -->
+		)
+	</insert>
+	
+	
+
+	<!-- 게시글 수정 -->
+	<update id="updateArticle">
+		update notice
+		set noti_title = #{title},
+		noti_body = #{body},
+		noti_updatedate = SYSDATE,
+		noti_ischeck = #{isCheck}
+		where noti_no = #{no}
+	</update>
+
+	<!-- 수정화면 -->
+	<select id="updateViewRead" resultType="noticeVO">
+		select noti_no as no,
+		noti_writer as writer,
+		noti_title as title,
+		noti_body as body,
+		noti_regdate as regdate,
+		noti_updatedate as update_date,
+		noti_ischeck as isCheck
+		from notice
+		where noti_no = #{no}
+
+	</select>
+
+
+	<!-- 게시글 삭제 -->
+	<delete id="deleteArticle">
+		update notice
+		set noti_isshow = 'N'
+		where noti_no = #{no}
+
+	</delete>
+
+
+<!-- 첨부파일 관련//////////////////////////////// -->
+
+ <!--게시글 첨부파일 추가-->
+    <insert id="addAttach" ><!-- parameterType="int" -->
+        INSERT INTO noti_fileattach(
+            file_fullname
+            , file_no
+        ) VALUES (
+            #{fullname}
+            ,(select NVL(MAX(noti_no),0) from notice)
+        )
+    </insert>
+		
+    <!--게시글 첨부파일 조회-->
+    <select id="getAttach" resultType="noticeVO" parameterType="int">
+        SELECT
+            file_fullname as filename
+        FROM noti_fileattach
+        WHERE file_no = (select noti_no as no 
+        										from notice
+        										where noti_no = #{no})
+        				and file_isshow = 'Y'
+        ORDER BY file_regdate
+       
+    </select>
+    
+    <!-- 
+    <insert id="replaceAttach">
+        INSERT INTO noti_fileattach (
+            file_fullname
+            , file_no
+        ) VALUES (
+            #{fullName}
+            , #{no}
+        )
+    </insert>
+     -->
+   
+<!--   특정 게시글 첨부파일 일괄 삭제 
+    <delete id="deleteAllAttach">
+        DELETE FROM noti_fileattach
+        WHERE file_no = #{no}
+    </delete> --> 
+    
+    <!--게시글 첨부파일 삭제-->
+    <delete id="deleteAttach">
+        update noti_fileattach
+        set file_isshow = 'N'
+        where file_fullname = #{fullname}
+    </delete>
+    
+   
+    
+    <!--게시글 번호 조회-->
+    <select id="getNo" resultType="int">
+        SELECT file_no
+        FROM noti_fileattach
+        WHERE file_fullname = #{fullname}
+    </select>
+
+
+<!-- 첨부파일 업데이트(입력처리) -->
+	<insert id = "updateAttach">
+		insert into noti_fileattach(file_fullname,file_no)
+		values(#{filename},#{no})
+	</insert>
+		
+	<!-- 특정 게시글의 첨부파일 갯수 갱신 -->
+    <update id="updateAttachCnt">
+        UPDATE notice
+        SET noti_attachcnt = (SELECT COUNT(file_fullname) FROM noti_fileattach WHERE file_no = #{no})
+        WHERE noti_no = #{no}
+    </update>
+    
+    
+    
+  <!--   <sql id="search">
+        <if test="searchType != null">
+            <if test="searchType == 't'.toString()">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'c'.toString()">
+                AND content LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'w'.toString()">
+                AND writer LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="searchType == 'tc'.toString()">
+                AND (
+                    title LIKE CONCAT('%', #{keyword}, '%')
+                    OR content LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="searchType == 'cw'.toString()">
+                AND (
+                    content LIKE CONCAT('%', #{keyword}, '%')
+                    OR writer LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="searchType == 'tcw'.toString()">
+                AND (
+                    title LIKE CONCAT('%', #{keyword}, '%')
+                    OR content LIKE CONCAT('%', #{keyword}, '%')
+                    OR writer LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </if>
+    </sql> -->
+    
+    
+   <!--  
+	
+	<insert id="updateAttach">
+		insert into noti_fileattach(
+		file_fullname, file_no
+		)values(
+		#{fullname}, #{no}
+		)
+	</insert>
+	
+	
+	
+	파일 테이블 넣기 테스트
+	<insert id = "insertFile">
+		insert into noti_fileattach(
+			file_fullname, file_no
+		)values(
+			#{fullname},LAST_INSERT_ID()
+		)
+	</insert>
+	 -->
+	
+	  <!-- 
+	 게시글 첨부파일 삭제처리 
+	<delete id="deleteAttach">
+		delete from noti_fileattach
+		where file_fullname = #{fullname}
+	</delete>
+ -->
+<!--
+
+
+	<select id="getAttach">
+		select file_fullname
+		from noti_fileattach
+		where file_no = #{no}
+	</select> 
+
+
+	<insert id="addAttach">
+		insert into noti_fileattach(
+		file_fullname, file_no
+		)values(
+		#{fullname}, seq_notice.CURRVAL	
+		)
+	</insert>
+
+ 게시글의 첨부파일 업데이트 처리
+	
+	<insert id="updateAttach">
+		insert into noti_fileattach(
+		file_fullname, file_no
+		)values(
+		#{fullname}, #{no}
+		)
+	</insert>
+ 	  게시글 첨부파일 삭제처리 
+	<delete id="deleteAttach">
+		delete from noti_fileattach
+		where file_fullname = #{fullname}
+	</delete>
+
+
+/////////////////////////////////////////
+게시글 첨부파일추가 SQL
+<insert id = "addFile">
+	insert into noti_fileattach(
+		filefullname, file_no
+	)values(
+		#{fileName}, LAST_INSERT_ID()
+	)
+</insert> -->
+
+</mapper>
